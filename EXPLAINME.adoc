@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+= EXPLAINME — KRLAdapter.jl
+Jonathan Jewell (hyperpolymath)
+:toc:
+
+== One-line summary
+
+Adapter package defining *TangleIR* and wrapping the community Julia libraries
+*KnotTheory.jl* + *Skein.jl* — without modifying either — so the KRL (Knot
+Resolution Language) stack can compute invariants and persist IRs through
+them.
+
+== Honest scope
+
+This package *does* the following:
+
+* Define `TangleIR` (UUID-identified, port-based, PD-style crossings, provenance metadata)
+* Provide `TangleIR ↔ PlanarDiagram` conversion
+* Provide compositional operations on `TangleIR`: `compose`, `tensor`, `close_tangle`, `mirror`
+* Route invariant computation (`alexander`, `jones`, `determinant`, `signature`) to KnotTheory.jl
+* Route storage/retrieval (`store_ir!`, `fetch_ir`, `query_ir`) to Skein.jl
+* Preserve `TangleIR` UUIDs through Skein storage/fetch cycles via metadata encoding
+
+This package *does NOT* do the following:
+
+* Define invariant algorithms (KnotTheory.jl's job)
+* Define storage schemas or indexing (Skein.jl's job)
+* Define quandle presentations or semantic fingerprints (QuandleDB's job)
+* Parse KRL source language (TanglePL compiler's job — not yet built)
+* Connect to VeriSim or any other Hyperpolymath-stack database (not yet built)
+
+== Why it exists (in one paragraph)
+
+The KRL stack needs a canonical interchange type (TangleIR) and a place where
+KRL-stack-specific concerns meet the community knot-theory libraries. If that
+glue code lived inside KnotTheory.jl or Skein.jl, those libraries would stop
+being publishable community packages — they would carry Hyperpolymath-specific
+dependencies. KRLAdapter.jl is the clean boundary: community libs stay pure,
+and all KRL-stack coupling lives here.
+
+== Invariants (enforced, never violated)
+
+1. *Do not modify* KnotTheory.jl or Skein.jl. Ever. If either is missing a
+   capability KRLAdapter needs, the wrapper is added *here*, not upstream.
+2. *TangleIR UUID is stable* across Skein store/fetch roundtrips. The UUID
+   is preserved via `krl_ir_uuid` metadata.
+3. *Provenance chain is preserved*: when `simplify` or other derivations
+   produce a new `TangleIR`, the `parent_id` is recorded in `metadata.extra`.
+4. *Open tangles cannot be stored* via the current `store_ir!` path
+   (Skein's PD-first storage only handles closed diagrams).
+
+== Boundaries (what belongs here vs. elsewhere)
+
+[cols="2,2",options="header"]
+|===
+|Concern | Where it belongs
+
+|Crossings, PD codes, DT codes, Gauss codes
+|KnotTheory.jl
+
+|Alexander/Jones/HOMFLY/Conway polynomials, Reidemeister moves
+|KnotTheory.jl
+
+|SQLite schema, query indexing, metadata storage
+|Skein.jl
+
+|TangleIR definition, UUID identity, provenance metadata
+|KRLAdapter.jl (here)
+
+|`compose`/`tensor`/`close`/`mirror` on TangleIR
+|KRLAdapter.jl (here)
+
+|Adapter glue: TangleIR ↔ PlanarDiagram, store_ir! / fetch_ir / query_ir
+|KRLAdapter.jl (here)
+
+|KRL surface-language parser + typechecker
+|`tangle/` (TanglePL compiler module, not here)
+
+|Quandle presentation extraction + semantic fingerprints
+|`nextgen-databases/quandledb/`
+
+|VerisimCore integration (when it happens)
+|Future `src/adapters/verisim.jl` in this repo
+|===
+
+== Evidence this works today
+
+* 51 tests passing (`julia --project=. -e 'using Pkg; Pkg.test()'`)
+* Trefoil end-to-end roundtrip verified: build IR → compute Jones → store in
+  Skein → fetch back → verify invariants agree → verify UUID preserved
+* `panic-attack assail` 0 findings
+* Used as Phase 4 dogfood candidate for `verisim-modular-experiment`
+
+== Known gaps (honest)
+
+* CRG grade D — fresh package, needs ~1 week of dogfooding for C
+* No benchmarks yet
+* No fuzz harness yet
+* No property-based tests for the compositional operations
+* Open tangles (non-empty ports) can be constructed but cannot be stored
+* No VeriSim adapter yet (Phase 4 pending)
+* Mutation, chaos, reflexive test categories absent (estate-wide pattern)
+
+See `READINESS.md` for the full CRG assessment and path to grade C.
+
+== Related
+
+* link:README.adoc[README.adoc] — public API and quick start
+* link:READINESS.md[READINESS.md] — CRG grade D assessment + path to C
+* `../KnotTheory.jl/` — community combinatorial knot-theory engine
+* `../Skein.jl/` — community persistence layer
+* `../tangle/` — host language; KRL is one of several DSLs that will live on Tangle
+* `../krl/` — KRL language repo (grade X, scaffolded)
+* `../nextgen-databases/verisim-modular-experiment/` — Phase 4 target consumer
