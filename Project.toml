@@ -1,0 +1,22 @@
+name = "KRLAdapter"
+uuid = "28b5845d-d150-4ffa-a60e-3b762afb26c8"
+authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
+version = "0.1.0"
+license = "MPL-2.0"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+KnotTheory = "215268c9-7579-426e-8b7c-a3dc27acd339"
+Skein = "e8a1f3d0-7c42-4e9a-b5d1-3a7f8c2e1d0b"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[compat]
+KnotTheory = "1"
+Skein = "0.3"
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

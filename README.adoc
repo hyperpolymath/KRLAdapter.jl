@@ -1,0 +1,185 @@
+// SPDX-License-Identifier: MPL-2.0
+// (PMPL-1.0-or-later preferred; MPL-2.0 for Julia ecosystem consistency)
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+= KRLAdapter.jl
+Jonathan Jewell (hyperpolymath)
+:toc: left
+:toc-title: Contents
+:doctype: article
+:icons: font
+
+Adapter package for the KRL (Knot Resolution Language) stack.
+Defines `TangleIR` and wraps the community Julia libraries
+link:https://github.com/hyperpolymath/KnotTheory.jl[KnotTheory.jl] and
+link:https://github.com/hyperpolymath/Skein.jl[Skein.jl] without modifying them.
+
+NOTE: KRL is pronounced "curl" — as in: it curls knots into semantic form.
+
+== What this package is
+
+KRLAdapter.jl is the *only* place where KRL-stack concerns meet the
+community Julia knot-theory libraries. It:
+
+* defines `TangleIR`, the canonical interchange object for the KRL stack;
+* provides thin adapters that convert `TangleIR` ↔ KnotTheory's `PlanarDiagram`;
+* provides thin adapters that store/fetch `TangleIR` via Skein;
+* provides compositional operations (`compose`, `tensor`, `close_tangle`, `mirror`)
+  on `TangleIR` directly.
+
+KRLAdapter.jl is the *adapter*. `KnotTheory.jl` and `Skein.jl` are its
+dependencies, not targets for modification. If either library lacks a
+capability KRLAdapter needs, the missing capability is added *here*, as a
+wrapper — never upstream in the community lib.
+
+== Architecture
+
+----
+KRL surface language  (pronounced "curl")
+    ↓ compiled by TanglePL module (external)
+TangleIR              (defined in THIS package, src/ir.jl)
+    ↓ adapters in THIS package
+KnotTheory.jl         (community library — invariants, Reidemeister moves)
+Skein.jl              (community library — persistence, indexing)
+----
+
+The separation of concerns is strict:
+
+* *KnotTheory.jl* owns: `PlanarDiagram`, invariant algorithms (Alexander, Jones,
+  Conway, HOMFLY, signature, determinant), Reidemeister move simplification,
+  the knot table. *No persistence.*
+* *Skein.jl* owns: persistence, indexing, query, invariant cache (optional
+  via its `KnotTheoryExt` extension). *No invariant algorithms.*
+* *KRLAdapter.jl* owns: `TangleIR`, adapters, compositional operations,
+  the KRL-stack interface. *No invariant algorithms, no storage.*
+
+== Installation
+
+[source,julia]
+----
+using Pkg
+Pkg.add("KRLAdapter")  # once registered on JuliaHub
+----
+
+Or, during development:
+
+[source,julia]
+----
+Pkg.develop(path="/path/to/KRLAdapter.jl")
+----
+
+== Quick start
+
+[source,julia]
+----
+using KRLAdapter
+import Skein
+
+# Build a TangleIR for the trefoil from KnotTheory's built-in knot table
+ir = trefoil_ir()
+
+# Invariants via KnotTheory adapter
+j = jones(ir)
+a = alexander(ir)
+d = KRLAdapter.determinant(ir)   # 3 for the trefoil
+s = KRLAdapter.signature(ir)
+
+# Reidemeister simplification via KnotTheory adapter
+simplified = simplify(ir)
+
+# Mirror (sign flip on every crossing) — pure TangleIR op, no KnotTheory call
+m = mirror(ir)
+
+# Persistence via Skein adapter
+db = Skein.SkeinDB(":memory:")
+id = store_ir!(db, ir; name = "trefoil", tags = ["3_1", "prime"])
+
+# Retrieve later
+fetched = fetch_ir(db, "trefoil")
+
+# Query by indexed invariant
+names = query_ir(db; crossing_number = 3)
+
+close(db)
+----
+
+== TangleIR structure
+
+`TangleIR` is defined in `src/ir.jl`:
+
+[source,julia]
+----
+struct Port
+    id::Symbol
+    side::Symbol        # :top | :bottom | :left | :right
+    index::Int
+    orientation::Symbol # :in | :out | :unknown
+end
+
+struct CrossingIR
+    id::Symbol
+    sign::Int                 # +1 | -1
+    arcs::NTuple{4,Int}       # PD-style: (a, b, c, d)
+end
+
+struct TangleMetadata
+    name::Union{String,Nothing}
+    source_text::Union{String,Nothing}
+    tags::Vector{String}
+    provenance::Symbol        # :user | :derived | :rewritten | :imported
+    extra::Dict{Symbol,Any}
+end
+
+struct TangleIR
+    id::UUID
+    ports_in::Vector{Port}
+    ports_out::Vector{Port}
+    crossings::Vector{CrossingIR}
+    components::Vector{Vector{Int}}
+    metadata::TangleMetadata
+end
+----
+
+Closed diagrams have `isempty(ports_in) && isempty(ports_out)`; open tangles
+have non-empty port vectors and can be combined via `compose` and `tensor`.
+
+== Public API
+
+=== IR types and predicates
+
+* `Port`, `CrossingIR`, `TangleMetadata`, `TangleIR`
+* `is_closed(ir)`, `crossing_count(ir)`, `writhe(ir)`
+
+=== Operations (on TangleIR directly, no KnotTheory calls)
+
+* `compose(a, b)` — sequential composition
+* `tensor(a, b)` — tensor / juxtaposition product
+* `close_tangle(a)` — trace closure
+* `mirror(a)` — sign flip on every crossing
+
+=== KnotTheory adapter
+
+* `pd_to_ir(pd)`, `ir_to_pd(ir)` — conversion
+* `alexander(ir)`, `jones(ir)` — polynomial invariants
+* `determinant(ir)`, `signature(ir)` — integer invariants
+* `simplify(ir)` — Reidemeister simplification, returns new `TangleIR`
+* `trefoil_ir()`, `figure_eight_ir()`, `unknot_ir()` — convenience constructors
+
+=== Skein adapter
+
+* `store_ir!(db, ir; name, tags)` — persist as Skein record
+* `fetch_ir(db, name)` — reconstruct as `TangleIR`
+* `query_ir(db; crossing_number, writhe, determinant, signature)` — filtered query
+
+== Licensing
+
+Licensed under MPL-2.0 for Julia ecosystem consistency with sibling community
+libraries. The author's preferred license is
+link:https://github.com/hyperpolymath/palimpsest-license[PMPL-1.0-or-later].
+
+== Related
+
+* link:https://github.com/hyperpolymath/KnotTheory.jl[KnotTheory.jl] — combinatorial engine (community)
+* link:https://github.com/hyperpolymath/Skein.jl[Skein.jl] — persistence layer (community)
+* link:https://github.com/hyperpolymath/tangle[tangle] — Tangle general-purpose host language
+* link:https://github.com/hyperpolymath/krl[krl] — KRL language spec (forthcoming)
