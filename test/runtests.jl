@@ -11,4 +11,5 @@ using KRLAdapter
     include("property_test.jl")
     include("fuzz_smoke.jl")
     include("tangle_bridge_test.jl")
+    include("verisim_stub_test.jl")
 end
