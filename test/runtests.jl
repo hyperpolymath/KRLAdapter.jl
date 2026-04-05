@@ -8,4 +8,6 @@ using KRLAdapter
     include("ir_test.jl")
     include("operations_test.jl")
     include("adapter_roundtrip.jl")
+    include("property_test.jl")
+    include("fuzz_smoke.jl")
 end
