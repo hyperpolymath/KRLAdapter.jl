@@ -28,5 +28,6 @@ include("ir.jl")
 include("operations.jl")
 include("adapters/knottheory.jl")
 include("adapters/skein.jl")
+include("adapters/tangle.jl")
 
 end # module

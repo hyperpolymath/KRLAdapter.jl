@@ -10,4 +10,5 @@ using KRLAdapter
     include("adapter_roundtrip.jl")
     include("property_test.jl")
     include("fuzz_smoke.jl")
+    include("tangle_bridge_test.jl")
 end
