@@ -82,25 +82,57 @@ end
     @test ir.components[1] == [1, 2, 3, 4, 5, 6]
 end
 
-@testset "Tangle bridge — end-to-end: tangle blob → TangleIR → Skein" begin
+@testset "Tangle bridge — end-to-end: tangle blob → TangleIR → Skein round-trip" begin
     import Skein
 
     # Simulate a Tangle compile output: trefoil blob
     blob = "pdv1|x=1,2,3,4,1;3,4,5,6,1;5,6,1,2,1|c=1,2,3,4,5,6"
     ir = pdv1_blob_to_ir(blob; name = "tangle_trefoil", source_text = "sigma_1 ; sigma_1 ; sigma_1")
 
-    # The IR came from tangle, but Skein's PD-first path requires KnotTheory's
-    # PlanarDiagram shape. We can't store tangle-emitted IRs directly in Skein
-    # without a corresponding PlanarDiagram — because Skein expects KnotTheory
-    # arcs which may be labelled differently.
-    #
-    # This is the known limitation documented in TEST-NEEDS.md: the
-    # tangle→TangleIR bridge lands us in-memory, but tangle's arc labelling
-    # doesn't match KnotTheory's internal PD convention. Direct store_ir!
-    # requires a re-canonicalisation step (future work).
-    #
-    # For now, verify only the in-memory properties.
     @test crossing_count(ir) == 3
     @test KRLAdapter.writhe(ir) == 3  # all positive
     @test ir.metadata.source_text == "sigma_1 ; sigma_1 ; sigma_1"
+
+    # Round-trip through Skein (verified 2026-04-05: tangle arc convention is
+    # compatible with KnotTheory's PD format for data-level round-trip)
+    db = Skein.SkeinDB(":memory:")
+    try
+        id = store_ir!(db, ir; name = "tangle_trefoil_stored", tags = ["from_tangle"])
+        @test id isa String
+
+        fetched = fetch_ir(db, "tangle_trefoil_stored")
+        @test fetched !== nothing
+        @test crossing_count(fetched) == crossing_count(ir)
+        @test [c.sign for c in fetched.crossings] == [c.sign for c in ir.crossings]
+        @test [c.arcs for c in fetched.crossings] == [c.arcs for c in ir.crossings]
+
+        # UUID preservation via metadata encoding
+        @test string(fetched.id) == string(ir.id)
+
+        # Source text + tags survive
+        @test fetched.metadata.source_text == "sigma_1 ; sigma_1 ; sigma_1"
+        @test "from_tangle" in fetched.metadata.tags
+    finally
+        close(db)
+    end
+end
+
+@testset "Tangle bridge — alternating signs round-trip (figure-8 shape)" begin
+    import Skein
+
+    blob = "pdv1|x=1,2,3,4,1;3,4,5,6,-1;5,6,7,8,1;7,8,1,2,-1|c=1,2,3,4,5,6,7,8"
+    ir = pdv1_blob_to_ir(blob; name = "alternating")
+
+    db = Skein.SkeinDB(":memory:")
+    try
+        store_ir!(db, ir; name = "alt_test")
+        fetched = fetch_ir(db, "alt_test")
+
+        @test fetched !== nothing
+        @test crossing_count(fetched) == 4
+        @test [c.sign for c in fetched.crossings] == [1, -1, 1, -1]
+        @test [c.arcs for c in fetched.crossings] == [c.arcs for c in ir.crossings]
+    finally
+        close(db)
+    end
 end

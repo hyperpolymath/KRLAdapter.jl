@@ -50,9 +50,18 @@ Format: `pdv1|x=a,b,c,d,s;a,b,c,d,s;...|c=arc,arc;arc,arc;...`
 `pdv1_blob_to_ir` parses this into a `TangleIR` with `provenance = :imported`
 and the raw blob preserved in `metadata.extra[:raw_blob]`.
 
-Known limitation: Tangle's arc labelling may not match KnotTheory's internal
-PD convention exactly, so a tangle-sourced TangleIR may require
-re-canonicalisation before being stored via `store_ir!`.
+**Round-trip through Skein:** verified working for trefoil + alternating-
+sign diagrams (see `test/tangle_bridge_test.jl`). Tangle's arc convention
+is compatible with KnotTheory's PD format for data-level round-trip
+(arcs, signs, components all preserved, UUID preserved via metadata).
+
+**Correctness caveat (not a data limitation, a semantic one):** invariant
+computation on a tangle-sourced IR will give correct knot invariants only
+if Tangle's compiler emitted a canonically-correct PD code. Hand-written
+or malformed pdv1 blobs may parse successfully but encode invalid diagrams
+whose KnotTheory-computed invariants are meaningless. End-to-end semantic
+validation (tangle source → blob → IR → invariants match expected knot)
+is future work — requires running Tangle's compiler in-process.
 
 ## Metadata conventions for Skein storage
 
