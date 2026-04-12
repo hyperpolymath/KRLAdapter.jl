@@ -24,12 +24,16 @@ hand-off for future Claude sessions working on the KRL stack.
   if Tangle emits canonically-correct PD codes (needs E2E test with real
   Tangle compiler invocation)
 
-### VerisimCore adapter: stub in place
+### VerisimCore adapter: WIRED (M4 complete — 2026-04-12)
 
-- `AbstractVerisimCore` type + 4 stub methods (store/fetch/query/prove_consonance)
-- Throws `VerisimCoreNotWiredError` with experiment pointer until wired
-- Ready for Phase 4 of verisim-modular-experiment — see session note at
-  `nextgen-databases/verisim-modular-experiment/docs/sessions/2026-04-05-krladapter-phase4-prep.adoc`
+- `LocalVerisimCore` concrete type added; all 4 methods implemented
+- `store_ir_verisim!`: enrich! with UUID↔OctadId bridge + dt_codes_from_blob-compatible proof_bytes
+- `fetch_ir_verisim`: reconstructs metadata, name, DT code, chain length
+- `query_ir_verisim`: 5 predicates (provenance/tags/crossing_count/name_prefix/actor)
+- `prove_consonance`: delegates to VCLProver tropical Bellman-Ford with graceful fallback
+- 46 integration tests green (`test/verisim_integration_test.jl`)
+- **Phase 4 result confirmed**: KRLAdapter.jl is Core-only — no Federable shapes needed
+- Requires `using Verisim` before `LocalVerisimCore()` — integration tests skip when absent
 
 ### KRL language: grade E
 
