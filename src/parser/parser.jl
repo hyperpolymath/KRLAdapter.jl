@@ -181,40 +181,40 @@ end
 # Grammar: expression → compose_expr → tensor_expr → unary_expr → atom
 # ---------------------------------------------------------------------------
 
-function parse_expression(ps::ParserState)::KRLNode
-    parse_compose_expr(ps)
+"""
+Parse an expression. `in_parens` controls whether `;` is treated as sequential
+composition. At the top level of a statement, `;` is a terminator and must NOT
+be consumed here — the statement parsers (`parse_binding`, `parse_expression_stmt`)
+consume it explicitly via `_expect!(ps, :semi)`. Only inside a parenthesised
+sub-expression is `;` sequential composition.
+"""
+function parse_expression(ps::ParserState; in_parens::Bool = false)::KRLNode
+    parse_compose_expr(ps; in_parens)
 end
 
 # compose_expr = tensor_expr { ";" tensor_expr }
-# BUT: ";" is ALSO the statement terminator.
-# In expression context (inside parens or as a statement body), we need
-# to be careful: we only consume ";" if what follows is a tensor_expr
-# (i.e., not eof, ")", or the statement-level ";" at end).
-#
-# Resolution: inside parse_compose_expr we check that the token after ";"
-# is NOT eof or ")" before consuming it as composition.
-function parse_compose_expr(ps::ParserState)::KRLNode
+# Sequential composition with ";" is only active inside parentheses.
+# At the statement level, ";" terminates the statement and must not be consumed.
+function parse_compose_expr(ps::ParserState; in_parens::Bool = false)::KRLNode
     first = parse_tensor_expr(ps)
     operands = KRLNode[first]
 
-    while true
-        # Peek at ";" — only treat as compose if followed by a tensor_expr,
-        # not by end-of-input or ")".
-        t = _peek(ps)
-        t.kind == :semi || break
+    # Only consume ";" as composition when we are inside a parenthesised expression.
+    if in_parens
+        while true
+            t = _peek(ps)
+            t.kind == :semi || break
+            # Stop before ")" which closes the paren context.
+            next_pos = ps.pos + 1
+            if next_pos > length(ps.tokens)
+                break
+            end
+            after = ps.tokens[next_pos]
+            (after.kind == :eof || after.kind == :rparen) && break
 
-        # Look ahead: what follows the ";"?
-        next_pos = ps.pos + 1
-        if next_pos > length(ps.tokens)
-            break
+            _advance!(ps)  # consume ";"
+            push!(operands, parse_tensor_expr(ps))
         end
-        after = ps.tokens[next_pos]
-        # If the token after ";" would end a context, stop.
-        (after.kind == :eof || after.kind == :rparen ||
-         (after.kind == :keyword && after.value in ("and", "where"))) && break
-
-        _advance!(ps)  # consume ";"
-        push!(operands, parse_tensor_expr(ps))
     end
 
     length(operands) == 1 ? operands[1] : KRLCompose(operands, first.line, first.col)
@@ -263,10 +263,10 @@ function parse_atom(ps::ParserState)::KRLNode
         return KRLGenerator(Symbol(t.value), idx, t.line, t.col)
     end
 
-    # parenthesised expression
+    # parenthesised expression — ";" is sequential composition inside parens
     if t.kind == :lparen
         _advance!(ps)
-        expr = parse_expression(ps)
+        expr = parse_expression(ps; in_parens=true)
         _expect!(ps, :rparen)
         return KRLParenExpr(expr, t.line, t.col)
     end
