@@ -1,4 +1,4 @@
-Manifest.toml
+# Manifest.toml is committed for reproducibility (research artifact)
 /docs/build/
 *.jl.*.cov
 *.jl.cov
