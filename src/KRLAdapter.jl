@@ -31,4 +31,10 @@ include("adapters/skein.jl")
 include("adapters/tangle.jl")
 include("adapters/verisim.jl")
 
+# KRL surface language parser (v0.2 — Julia implementation, Option B)
+include("parser/lexer.jl")
+include("parser/ast.jl")
+include("parser/parser.jl")
+include("parser/lower.jl")
+
 end # module

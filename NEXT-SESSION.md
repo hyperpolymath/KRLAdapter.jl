@@ -75,4 +75,5 @@ hand-off for future Claude sessions working on the KRL stack.
 
 ## Desktop continuation list
 
-See `~/Desktop/KRL-STACK-NEXT-SESSION.md` for the priority-ordered queue.
+See `ROADMAP.adoc` in this repo for the priority-ordered queue. If you want a
+desktop mirror, use `~/Desktop/KRL-STACK-NEXT-SESSION.md` as a pointer file.
