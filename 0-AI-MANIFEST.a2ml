@@ -2,9 +2,9 @@
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 @manifest {
-  version: "1.0.0",
+  version: "1.0.1",
   repo: "hyperpolymath/KRLAdapter.jl",
-  updated: "2026-02-13"
+  updated: "2026-04-12"
 }
 
 @canonical-locations {
@@ -18,10 +18,12 @@
 }
 
 @critical-invariants {
-  rule: "SCM files in .machine_readable/ ONLY — never in repository root",
-  rule: "All source files must have SPDX-License-Identifier: PMPL-1.0-or-later header",
-  rule: "All 493+ tests must pass before commit",
-  rule: "KnotTheory.jl is a weakdep — never add as hard dependency"
+  rules: [
+    "SCM files in .machine_readable/ ONLY — never in repository root",
+    "All source files must have SPDX-License-Identifier: PMPL-1.0-or-later header",
+    "All 5472+ tests must pass before commit",
+    "KnotTheory.jl is a weakdep — never add as hard dependency"
+  ]
 }
 
 @lifecycle {

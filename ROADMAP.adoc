@@ -17,25 +17,43 @@ working for KnotTheory, Skein, tangle, and a VerisimCore stub.
 * [ ] JuliaHub registration for KnotTheory.jl, Skein.jl, and KRLAdapter.jl
 * [ ] External-project dogfood evidence collection for CRG B
 
-== v0.2.0 — KRL Language Path to Grade D
+== v0.2.0 — KRL Language Path to Grade D ✓ DONE 2026-04-12
 
-* [ ] Decide parser implementation language (Tangle OCaml / KRLAdapter Julia / sibling OCaml)
-* [ ] Implement parser for `krl/spec/grammar.ebnf`
-* [ ] Promote `krl/` from Grade E to Grade D
+* [x] Decide parser implementation language — **Option B: Julia in KRLAdapter.jl** (commit b20b09f,
+  see `krl/spec/grammar-overview.md`)
+* [x] Implement parser for `krl/spec/grammar.ebnf` — `src/parser/` (lexer.jl, ast.jl, parser.jl,
+  lower.jl), 57-test `test/parser_test.jl`, full lexer→AST→TangleIR lowering (commit 3317196)
+* [x] Promote `krl/` from Grade E to Grade D — READINESS.md updated (commit 327e0ff)
 
-== v0.3.0 — VerisimCore Wiring
+== v0.3.0 — VerisimCore Wiring ✓ DONE 2026-04-12
 
-* [ ] Replace `AbstractVerisimCore` stub path with concrete VerisimCore integration
-* [ ] Execute Phase 4 plan from `nextgen-databases/verisim-modular-experiment/docs/sessions/2026-04-05-krladapter-phase4-prep.adoc`
+* [x] Replace `AbstractVerisimCore` stub with `LocalVerisimCore` concrete implementation in
+  `src/adapters/verisim.jl`: UUID↔OctadId bridge, `_ir_to_proof_bytes`, store/fetch/query/
+  prove_consonance — 46-test `test/verisim_integration_test.jl` (commit bba00d1)
+* [x] Phase 4 result confirmed: KRLAdapter.jl is **Core-only** — no Federable shapes needed
+  (see `nextgen-databases/verisim-modular-experiment/docs/sessions/2026-04-05-krladapter-phase4-prep.adoc`)
+
+== v0.3.1 — Residual M4 Cleanup
+
+* [ ] Document `prove_consonance` silent-degradation contract in EXPLAINME.adoc — when
+  `Main.KnotTheory` is absent the try/catch path returns a nil proof; callers must handle this
+* [ ] Document `LocalVerisimCore` Julia `Serialization` stability risk in EXPLAINME.adoc — proof_bytes
+  format is not stable across major Julia releases; store Julia version in metadata
+* [ ] Fix `0-AI-MANIFEST.a2ml` "extra tokens after manifest" panic-attack parse error
+* [ ] Commit or `.gitignore` any remaining untracked root files
 
 == v0.4.0 — Integration Clarifications
 
 * [ ] Resolve Task #6 ambiguity for PanLL wiring:
-  which nextgen-databases client and which integration shape (telemetry/panel/trace)
+  which nextgen-databases client (nqc / v-api-gateway / quandledb server) and which
+  integration shape (telemetry / panel / trace export) — **blocked on Jonathan's decision**
 * [ ] Add end-to-end tangle compiler invocation validation for tangle -> TangleIR semantics
+  (subprocess invocation or tangle-wasm via WebAssembly.jl)
 
 == v0.5.0 — Benchmarks and Hardening
 
-* [ ] Benchmark KnotTheory.jl, Skein.jl, and tangle integration paths
-* [ ] Publish Six-Sigma classification evidence in `benchmark/` and README/READINESS updates
+* [x] Six-Sigma classifier added to `benchmark/` for KnotTheory, Skein, and tangle paths
+  (commits dab4b41, 9f20139, 73699bf — 2026-04-12)
+* [ ] Publish Six-Sigma classification evidence in README/READINESS once benchmarks run on
+  reference hardware
 
