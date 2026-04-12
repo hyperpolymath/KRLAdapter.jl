@@ -1,8 +1,8 @@
 name = "KRLAdapter"
 uuid = "28b5845d-d150-4ffa-a60e-3b762afb26c8"
-authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
-version = "0.1.0"
 license = "MPL-2.0"
+version = "0.1.0"
+authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -18,6 +18,7 @@ julia = "1.10"
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Verisim = "d7869902-4796-4fb1-b062-064d07af1eff"
 
 [targets]
 test = ["Test", "Random"]
