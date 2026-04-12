@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+= KRLAdapter.jl — Roadmap
+:revdate: 2026-04-12
+
+This roadmap was created during estate-cleanup triage to convert next-session
+handover notes into tracked milestones.
+
+== Current State
+
+KRLAdapter.jl is at Grade C with broad test coverage. Core adapter surface is
+working for KnotTheory, Skein, tangle, and a VerisimCore stub.
+
+== v0.1.1 — External Evidence Closure
+
+* [ ] JuliaHub registration for KnotTheory.jl, Skein.jl, and KRLAdapter.jl
+* [ ] External-project dogfood evidence collection for CRG B
+
+== v0.2.0 — KRL Language Path to Grade D
+
+* [ ] Decide parser implementation language (Tangle OCaml / KRLAdapter Julia / sibling OCaml)
+* [ ] Implement parser for `krl/spec/grammar.ebnf`
+* [ ] Promote `krl/` from Grade E to Grade D
+
+== v0.3.0 — VerisimCore Wiring
+
+* [ ] Replace `AbstractVerisimCore` stub path with concrete VerisimCore integration
+* [ ] Execute Phase 4 plan from `nextgen-databases/verisim-modular-experiment/docs/sessions/2026-04-05-krladapter-phase4-prep.adoc`
+
+== v0.4.0 — Integration Clarifications
+
+* [ ] Resolve Task #6 ambiguity for PanLL wiring:
+  which nextgen-databases client and which integration shape (telemetry/panel/trace)
+* [ ] Add end-to-end tangle compiler invocation validation for tangle -> TangleIR semantics
+
+== v0.5.0 — Benchmarks and Hardening
+
+* [ ] Benchmark KnotTheory.jl, Skein.jl, and tangle integration paths
+* [ ] Publish Six-Sigma classification evidence in `benchmark/` and README/READINESS updates
+
