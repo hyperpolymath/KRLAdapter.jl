@@ -14,4 +14,5 @@ using KRLAdapter
     include("verisim_stub_test.jl")
     include("verisim_integration_test.jl")
     include("parser_test.jl")
+    include("quandledb_groove_test.jl")
 end

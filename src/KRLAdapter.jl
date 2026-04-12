@@ -30,6 +30,10 @@ include("adapters/knottheory.jl")
 include("adapters/skein.jl")
 include("adapters/tangle.jl")
 include("adapters/verisim.jl")
+include("adapters/quandledb.jl")  # nqc KQL pathway — Task #6 Phase 5
+
+# Groove/OTLP observability augmentation (extrinsic, application-agnostic)
+include("groove.jl")
 
 # KRL surface language parser (v0.2 — Julia implementation, Option B)
 include("parser/lexer.jl")
